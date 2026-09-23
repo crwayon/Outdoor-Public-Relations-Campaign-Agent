@@ -109,35 +109,37 @@
   </div>
 
   <script>
-    // 향후 n8n 웹훅 URL이 나오면 이 주소를 바꿔 끼우면 됩니다.
-    const N8N_WEBHOOK_URL = "https://your-n8n-instance.com/webhook/plan-gen";
+    // 1. 발급받으신 n8n 웹훅 URL을 그대로 넣습니다.
+    const N8N_WEBHOOK_URL = "https://fairytalegames.app.n8n.cloud/webhook/plan-gen";
 
+    // 2. 가짜(setTimeout)를 지우고 실제 통신(fetch)으로 동작하는 함수입니다.
     async function requestAiPlan() {
       const output = document.getElementById("outputArea");
       const btn = document.getElementById("genBtn");
       
       btn.innerText = "에이전트 연산 중...";
-      output.innerText = "n8n 에이전트 파이프라인 호출 중: BI 규정 검증 및 입지/카피 산출 중...";
+      output.innerText = "n8n 에이전트로 파라미터를 전송하여 BTL 기획안을 생성하고 있습니다...";
 
       try {
-        // 실제 n8n 웹훅 연동 전 데모용 시뮬레이션 타이머
-        setTimeout(() => {
-          output.innerText = 
-`[F-03 최적 입지 추천]
-- 강남역 11번 출구 전방 50m (유동인구 피크 12:30~13:30)
+        // fetch 함수가 n8n 서버로 실제 데이터를 전송합니다.
+        const response = await fetch(N8N_WEBHOOK_URL, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json" 
+          },
+          body: JSON.stringify({
+            storeName: document.getElementById("storeName").value,
+            targetGroup: document.getElementById("targetGroup").value,
+            constraints: document.getElementById("constraints").value
+          })
+        });
 
-[F-04 메인 카피 안]
-- "점심시간 10분, 당신의 통신비가 반으로 줄어듭니다."
-
-[F-05 현장 2인 1조 콜시트]
-- 1인: 또리 캐릭터 마스코트 안내 및 익명 미션카드 배부
-- 1인: 사은품 QR 체크 및 매장 내방 동선 안내
-
-[F-06 제약조건 사전 검증 완료]
-- 보행 안전거리 2.2m 확보 (통과)
-- 예산 지출 기준: 132만원 / 한도 150만원 (적정)`;
-          btn.innerText = "AI BTL 기획서 생성 요청 (F-06)";
-        }, 1200);
+        // n8n에서 돌려준 {"status": "success", "plan": "..."} JSON 응답을 파싱합니다.
+        const data = await response.json();
+        
+        // n8n이 생성해 준 실제 plan 결과를 화면에 표시
+        output.innerText = data.plan;
+        btn.innerText = "AI BTL 기획서 생성 요청 (F-06)";
 
       } catch (err) {
         output.innerText = "호출 실패: n8n 웹훅 연결 상태를 확인해주세요.";
